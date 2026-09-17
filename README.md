@@ -1,5 +1,13 @@
 # NADT — Network Automation Deployment Tool（网络自动化交付工具）
 
+[![CI](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml)
+[![Build EXE](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
+[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
+[![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](#)
+
+**v1.12.0** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#开发与测试--development--tests)
+
 > ⚠️ **预览版 / PREVIEW** —— 本工具仍在持续完善中（部分 UI 与文档待打磨、少数场景未覆盖），
 > 先放出来供试用与参考。**当前版本 v1.12（预览版）**，欢迎反馈问题。
 >
@@ -223,3 +231,26 @@ python -m PyInstaller --clean --noconfirm NADT.spec
 - TFTP 端口 69 需在防火墙放行；交换机管理网段与 DHCP/TFTP 必须互通
 - 仅用于授权设备的开局交付，请勿用于未授权网络
 - 老项目：`C:\Users\yata\Documents\coding\批量交换机脚本生成\`（Excel 宏版）
+
+---
+
+## 开发与测试 / Development & Tests
+
+```bash
+# 安装（含开发依赖：pytest / ruff / openpyxl）
+python -m pip install -e ".[dev]"
+
+# 跑测试（模板引擎 / 批量编号 / 设备校验 / 清单解析 / DHCP / USB 包）
+python -m pytest -q
+
+# 静态检查
+ruff check .
+
+# 打包单文件 exe（Windows）
+python -m PyInstaller --clean --noconfirm NADT.spec
+```
+
+- 装好后也可用命令入口启动：`nadt`
+- 核心只用标准库；`openpyxl` 是可选依赖（设备清单 xlsx / Excel 模板导入导出），缺失时界面会提示而非崩溃
+- CI：`.github/workflows/ci.yml`（Windows 跑 pytest、Linux 跑 ruff）；`.github/workflows/build.yml`（打 tag 或手动触发 → 产出 exe artifact）
+- 版本号在 `pyproject.toml` 与 `nadt.__version__` **两处**，必须保持一致（有测试守着）

@@ -37,6 +37,8 @@ import shutil
 import copy
 from datetime import datetime
 
+__version__ = "1.12.0"
+
 # ═══════════════════════════════════════════════════════════════
 # 常量 / Constants
 # ═══════════════════════════════════════════════════════════════
@@ -868,11 +870,11 @@ def build_dhcp_dnsmasq(devices: list, tftp_ip: str, bootfile: str = "",
         "# dnsmasq 配置 — DHCP option 66/67 开局（通用 / 思科 auto-install）",
         "# 用法: 写入 /etc/dnsmasq.conf 或 dnsmasq 配置文件，重启服务生效",
         "# ============================================================",
-        f"# 文件服务器（option 66）",
+        "# 文件服务器（option 66）",
         f"dhcp-option=66,{tftp_ip}",
     ]
     if bootfile:
-        out.append(f'# 引导文件（option 67，华为映射表模式；思科 auto-install 用下面 host 段）')
+        out.append('# 引导文件（option 67，华为映射表模式；思科 auto-install 用下面 host 段）')
         out.append(f'dhcp-option=67,"{bootfile}"')
     if network and gateway and range_start and range_end:
         out += [
@@ -2234,7 +2236,7 @@ class NADTGUI:
         canvas = tk.Canvas(frm)
         vsb = ttk.Scrollbar(frm, orient=tk.VERTICAL, command=canvas.yview)
         inner = ttk.Frame(canvas)
-        inner_id = canvas.create_window((0, 0), window=inner, anchor="nw")
+        canvas.create_window((0, 0), window=inner, anchor="nw")
         canvas.configure(yscrollcommand=vsb.set)
         canvas.pack(side=tk.LEFT, fill=tk.BOTH, expand=True)
         vsb.pack(side=tk.RIGHT, fill=tk.Y)
@@ -3277,7 +3279,7 @@ NADT 自动化开局流程（Zero-Touch Provisioning）
 
 def main():
     root = tk.Tk()
-    app = NADTGUI(root)
+    NADTGUI(root)
     root.mainloop()
 
 

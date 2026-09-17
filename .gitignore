@@ -29,3 +29,4 @@ venv/
 .idea/
 .vscode/
 *.swp
+.pytest_cache/
