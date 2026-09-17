@@ -37,7 +37,7 @@ import shutil
 import copy
 from datetime import datetime
 
-__version__ = "1.12.1"
+__version__ = "1.12.2"
 
 # ═══════════════════════════════════════════════════════════════
 # 常量 / Constants
@@ -142,13 +142,19 @@ def _find_block_end(lines: list, start: int):
         if s.startswith("{{#if") or s.startswith("{{#for"):
             depth += 1
         elif s.startswith("{{#endif") or s.startswith("{{#endfor"):
+            if s not in ("{{#endif}}", "{{#endfor}}"):
+                raise ValueError(f"块结束指令不能带其他内容（会静默丢文本），请换行写：{s[:40]}")
             depth -= 1
             if depth == 0:
                 return block, els, i + 1
-        if s.startswith("{{#else") and depth == 1:
-            els = []
-            i += 1
-            continue
+        if s.startswith("{{#else"):
+            # 与 {{#if}}/{{#for}} 带 body 的行为保持一致：宁可报错，也不静默丢掉行内文本
+            if s != "{{#else}}":
+                raise ValueError(f"{{#else}} 指令行不能带其他内容（会静默丢文本），请换行写：{s[:40]}")
+            if depth == 1:
+                els = []
+                i += 1
+                continue
         (block if els is None else els).append(lines[i])
         i += 1
     raise ValueError("模板缺少块结束符 {{#endif}}/{{#endfor}}")
@@ -319,8 +325,11 @@ def build_usb_ini(devices: list, fileserver: str = "file:/usb:",
         out.append(f"[DEVICE{idx} DESCRIPTION]")
         idx += 1
         out.append(f"ESN={esn if esn else 'DEFAULT'}")
-        if mac:
-            out.append(f"MAC={normalize_mac(mac, 'huawei')}")
+        # MAC 非空但格式非法时 normalize_mac 返回 ""：此时**整行跳过**，
+        # 否则 ini 里会出现空的 `MAC=` 项（设备可能忽略或解析异常）
+        mac_norm = normalize_mac(mac, "huawei") if mac else ""
+        if mac_norm:
+            out.append(f"MAC={mac_norm}")
         out.append("DEVICETYPE=DEFAULT")
         sof = (extra.get("system_software") or system_software or "").strip()
         if sof:
@@ -419,15 +428,41 @@ def expand_device(dev: dict) -> list:
     return results
 
 
+def _count_range_values(expr: str) -> int:
+    """
+    **只数不展开**地计算 `{..}` 内容能展开多少项（与 `_parse_range_values` 分支规则保持一致）。
+
+    ⚠️ 存在的理由：`count_expansions` 号称"轻量预估"，早期却调用会**完整物化**区间列表的
+    `_parse_range_values` —— `{1-1000000}` 峰值约 63MB、`{1-100000000}` 直接吃满内存，
+    防组合爆炸的保护形同虚设。这里改成纯算术（O(段数) 时间、零额外内存）。
+    """
+    total = 0
+    for part in (x.strip() for x in expr.split(",") if x.strip()):
+        if "-" in part:
+            a, _, b = part.partition("-")
+            try:
+                lo, hi = int(a), int(b)
+            except ValueError:
+                return 0
+            if lo > hi:
+                lo, hi = hi, lo
+            total += hi - lo + 1
+        elif part.isdigit():
+            total += 1
+        else:
+            return 0          # 非法项 → 与 _parse_range_values 返回 [] 的行为对齐
+    return total
+
+
 def count_expansions(dev: dict) -> int:
-    """轻量预估展开数量（不实际展开，防 {1-1000000} 组合爆炸）。"""
+    """轻量预估展开数量（**纯算术，不展开**，防 {1-1000000} 组合爆炸）。"""
     def _count(text: str) -> int:
         if "{" not in text:
             return 1
         n = 1
         for m in re.findall(r"\{([^{}]*)\}", text):
-            vals = _parse_range_values(m)
-            n *= len(vals) if vals else 1
+            vals = _count_range_values(m)
+            n *= vals if vals else 1
         return n
     counts = []
     for k, v in dev.items():
@@ -590,6 +625,25 @@ def parse_sheet_rows(rows: list, sheet_name: str, warnings: list):
     a_col_has_var = any("{{" in str((r[0] if r else "") or "") for r in rows[1:7])
     if "【" not in a1 and not a_col_has_var:
         return {}, []
+    # 模板文本（A 列第 2 行起，保留 # 等分隔行）
+    tpl_lines = []
+    for r in rows[1:]:
+        v = r[0] if r else None
+        if v is None:
+            continue
+        s = str(v).rstrip()
+        if not s.strip() and not tpl_lines:
+            continue
+        tpl_lines.append(s)
+    tpl_text = "\n".join(tpl_lines)
+    # 识别 ESN 映射表 sheet（如 lswnet：每行都是 esn=...;cfgfile=...;）——NADT 会自动生成，跳过
+    tpl_effective = [x for x in tpl_text.splitlines() if x.strip()]
+    # ⚠️ 必须先判非空：all([]) 恒为 True，空模板会被误判成「映射表」而丢掉「A 列无模板文本」提示
+    if tpl_effective and all("esn=" in l and ("cfgfile=" in l or "netfile=" in l)
+                             for l in tpl_effective):
+        warnings.append(f"{sheet_name}: 检测为 ESN 映射表（{tpl_text.splitlines()[0][:60]}…），"
+                        f"NADT 会按设备清单自动生成映射表，已跳过此 sheet")
+        return {}, []
     # 参数名（第 1 行 C 列起，去花括号；重复警告并保留第一个）
     hdr = rows[0]
     params, seen = [], set()
@@ -608,27 +662,10 @@ def parse_sheet_rows(rows: list, sheet_name: str, warnings: list):
     if not params:
         warnings.append(f"{sheet_name}: 无参数列（第 1 行 C 列起应为 {{参数名}}）")
         return {}, []
-    # 模板文本（A 列第 2 行起，保留 # 等分隔行）
-    tpl_lines = []
-    for r in rows[1:]:
-        v = r[0] if r else None
-        if v is None:
-            continue
-        s = str(v).rstrip()
-        if not s.strip() and not tpl_lines:
-            continue
-        tpl_lines.append(s)
-    tpl_text = "\n".join(tpl_lines)
     if not tpl_text.strip():
         warnings.append(f"{sheet_name}: A 列无模板文本")
         return {}, []
     tname = sheet_name.strip()
-    # 识别 ESN 映射表 sheet（如 lswnet：每行都是 esn=...;cfgfile=...;）——NADT 会自动生成，跳过
-    if all("esn=" in l and ("cfgfile=" in l or "netfile=" in l)
-           for l in (x for x in tpl_text.splitlines() if x.strip())):
-        warnings.append(f"{sheet_name}: 检测为 ESN 映射表（{tpl_text.splitlines()[0][:60]}…），"
-                        f"NADT 会按设备清单自动生成映射表，已跳过此 sheet")
-        return {}, []
     templates = {tname: tpl_text}
     # 设备（第 2 行起每行 = 一台）
     devices = []
