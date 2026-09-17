@@ -3,10 +3,10 @@
 [![CI](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml)
 [![Build EXE](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.9+](https://img.shields.io/badge/python-3.9%2B-blue.svg)](pyproject.toml)
+[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
 [![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](#)
 
-**v1.12.0** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#开发与测试--development--tests)
+**v1.12.2** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#开发与测试--development--tests)
 
 > ⚠️ **预览版 / PREVIEW** —— 本工具仍在持续完善中（部分 UI 与文档待打磨、少数场景未覆盖），
 > 先放出来供试用与参考。**当前版本 v1.12（预览版）**，欢迎反馈问题。
@@ -14,12 +14,73 @@
 > 使用前请务必：① 把设备清单里的示例口令/凭据换成你自己的；② 在实验环境验证后再用于生产。
 
 
-基于 DHCP option 66/67 + TFTP 的交换机批量零接触开局工具（华为/思科/通用厂商）。
-**推荐入口：◎ 工作表 Sheet 页** —— Excel 宏式表格：A 列写配置模板文本、第 1 行 C 列起写参数名、
-每行一台设备参数，双击单元格编辑，点「生成脚本」直接出全部 .cfg。不会用宏也能上手。
+A **vendor-neutral, zero-touch provisioning** tool for network switches, built on **DHCP option 66/67 + TFTP**
+(Huawei / Cisco / generic presets). A factory-fresh switch gets an address from DHCP, downloads its own config
+via option 66/67, applies it, and is ready — no console cable, no manual typing. It ships with a spreadsheet-style
+workbench (template text in column A, parameter names in row 1, one device per row → every `.cfg` in one click),
+an asyncio **TFTP server**, per-device `.cfg` generation and an **EasyDeploy USB package** builder.
 
-基于 **DHCP option 66/67** 的**厂商无关**网络设备批量自动化开局工具（华为/思科/通用）。
-设备出厂开机 → DHCP 自动获取 IP → 按 option 66/67 下载配置 → 自动应用 → 开局完成（Zero-Touch Provisioning）。
+> 基于 **DHCP option 66/67 + TFTP** 的**厂商无关**交换机批量**零接触开局**（Zero-Touch Provisioning）工具（华为/思科/通用）。
+> 设备出厂开机 → DHCP 自动获取 IP → 按 option 66/67 下载配置 → 自动应用 → 开局完成。
+>
+> **推荐入口：◎ 工作表 Sheet 页** —— Excel 宏式表格：A 列写配置模板文本、第 1 行 C 列起写参数名、
+> 每行一台设备参数，双击单元格编辑，点「生成脚本」直接出全部 .cfg。**不会用宏也能上手**。
+
+**⬇️ 下载 / Downloads:** [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases)
+（Windows 单文件 exe，免安装、无需 Python）
+
+---
+
+## English
+
+### What it does
+
+NADT mass-provisions switches over the network, without ever touching a console:
+
+1. A brand-new switch boots and gets an address from your DHCP server.
+2. The DHCP reply carries option 66/67 (`tftp-server-name` / `bootfile-name`) pointing at your TFTP server.
+3. The switch downloads **its own** `.cfg` (rendered per device from your template), applies it — and the
+   management IP, VLANs, accounts and services are all in place.
+
+The core engine is **vendor-neutral**: a device list + a `{{placeholder}}` template renderer + `.cfg` generation.
+Vendors are only presets:
+
+| Preset | Bootstrap file | ESN mapping | DHCP output |
+|---|---|---|---|
+| **Generic** (recommended) | — | bound by MAC | ISC dhcpd / dnsmasq |
+| **Huawei** | `lswnet.cfg` | ✅ EasyDeploy | Huawei VRP option 146 |
+| **Cisco** | `network-confg` | — bound by MAC | ISC dhcpd / dnsmasq |
+
+Adding a vendor = one entry in `VENDOR_PRESETS`; the engine stays untouched. The renderer is not
+vendor-specific either: any text config (VRP / IOS / XR / NX-OS / …) works with `{{variables}}`.
+
+### Requirements
+
+- Python 3.10+ (tested on Windows)
+- Core is standard-library only; `openpyxl` is optional — needed just for the Excel workbench and
+  template import: `pip install -e ".[excel]"`
+
+### Quick start
+
+```bash
+python -m pip install -e ".[excel]"
+python nadt.py            # or the console entry point: nadt
+```
+
+…or simply grab the single-file exe from [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases)
+(Windows, no Python required).
+
+Then walk the five tabs: **① device list → ② config template → ③ generate scripts → ④ TFTP server → ⑤ deployment notes**.
+The recommended entry point is the **◎ Worksheet Sheet** tab — an Excel-macro-style grid where you put the template
+text in column A, parameter names from row 1 column C, and one device per row; one click generates every `.cfg`.
+No macro skills needed.
+
+### Notes
+
+- This is a **preview** release — please validate in a lab before production use.
+- Replace the sample credentials in the device list and templates with your own first.
+- In-depth docs (Excel template import, USB ZTP package, `lswnet.cfg` version files, DHCP modes,
+  thousands-of-devices scale) are in the Chinese sections below.
 
 ## 🏭 厂商无关设计
 
