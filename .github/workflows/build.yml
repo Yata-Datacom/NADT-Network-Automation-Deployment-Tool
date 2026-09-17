@@ -1,0 +1,32 @@
+name: Build EXE
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  build:
+    name: PyInstaller (windows-latest)
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+      - name: Install
+        run: |
+          python -m pip install --upgrade pip
+          python -m pip install pyinstaller openpyxl
+      - name: Build
+        run: python -m PyInstaller --clean --noconfirm NADT.spec
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: NADT-exe
+          path: dist/*.exe
+          if-no-files-found: error

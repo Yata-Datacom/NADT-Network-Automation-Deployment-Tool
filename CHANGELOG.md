@@ -1,0 +1,90 @@
+# Changelog
+
+本项目遵循 [语义化版本](https://semver.org/lang/zh-CN/) 与
+[Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/) 格式。
+
+> 当前为**预览版（PREVIEW）**：功能可用但仍在打磨，少数场景未覆盖；
+> `x.y.z` 里 y 的每次提升代表一轮功能扩展。
+
+## [1.12.0] - 2026-09-17
+
+工程化改造：补齐开源项目该有的骨架（此前只有代码 + README）。
+
+### Added
+
+- `LICENSE`（MIT）
+- `pyproject.toml`：PEP 621 元数据 + `[project.scripts]` 命令入口 + ruff/pytest 配置，
+  现在可以 `pip install -e .`（装好后运行 `nadt` 启动），可选依赖 `[excel]` / `[dev]`
+- `tests/`：pytest 测试套件（模板引擎 / 批量编号 / 设备校验 / 清单解析 / 引导与映射 / DHCP / USB 包）
+- GitHub Actions：`.github/workflows/ci.yml`（Windows 跑 pytest、Linux 跑 ruff）、
+  `.github/workflows/build.yml`（打 tag 或手动触发 → PyInstaller 打包并上传 exe artifact）
+- 本 CHANGELOG；README 增加徽章与「开发与测试」章节
+
+### Notes
+
+- 源码里 `BASE_DIR` 沿用「打包后取 exe 目录、源码运行取脚本目录」的约定，测试不需要改动
+- 仓库内的模板/文档已脱敏：序列号、主机名、版本文件名一律方括号占位
+  （`[SN]` / `[HOSTNAME]` / `[SOFTWARE]`），口令统一为字面量 `Password`
+
+## [1.11.0] - 2026-09-01
+
+### Added
+
+- **表格工作台（◎ 工作表）**：Excel 宏式表格，直接编辑模板文本与设备行，可导入/导出 xlsx
+- U 盘 ZTP 包生成（`usb_config.ini`，CRLF）
+
+## [1.10.0] - 2026-09-01
+
+### Added
+
+- 「清除示例数据」按钮：清空设备清单与非默认模板
+
+## [1.9.0] - 2026-09-01
+
+### Added
+
+- 「生成 Excel 模板」：产出带示例模板与操作说明的 xlsx
+
+## [1.8.0] - 2026-09-01
+
+### Added
+
+- 误删撤销（Ctrl+Z）、生成自动归档、TFTP 开局完成清单、批量改扩展字段
+- Excel 列映射导入、**Excel 模板导入**（接管宏脚本工作流）
+
+## [1.7.0] - 2026-09-01
+
+### Added
+
+- 设备表多选 / 全选 / 批量删除 / 批量修改；导出勾选子集 CSV
+- 导入 CSV/Excel 时自动展开 `{1-100}` 批量编号
+
+## [1.6.0] - 2026-09-01
+
+### Added
+
+- **厂商无关化**：`VENDOR_PRESETS`（generic / huawei / cisco）+ `DHCP_STYLES`（ISC / dnsmasq / VRP option 146/67）
+- `normalize_mac()`：任意 MAC 写法归一（ISC 冒号式 / 华为点分式）
+
+### Changed
+
+- 删除与具体项目绑定的默认 VLAN 方案（type 只做模板映射，VLAN 显式填写）
+
+## [1.5.0] - 2026-09-01
+
+### Added
+
+- U 盘 ZTP 包、`lswnet.cfg` 版本/补丁字段、DHCP option 146、堆叠成员 ID
+
+## [1.4.0] - 2026-09-01
+
+### Added
+
+- asyncio 单事件循环 TFTP 服务器（千并发、按需缓存、并发上限可调）
+- 设备清单搜索/分页、批量校验、SQLite 设备库、并行生成 + 进度 + 失败汇总
+
+## [1.0.0] - 2026-09-01
+
+### Added
+
+- 首个可用版本：设备清单 → 模板渲染 → 批量生成配置；DHCP option 66/67 开局串
