@@ -37,7 +37,7 @@ import shutil
 import copy
 from datetime import datetime
 
-__version__ = "1.12.0"
+__version__ = "1.12.1"
 
 # ═══════════════════════════════════════════════════════════════
 # 常量 / Constants
@@ -88,12 +88,23 @@ def derive_defaults(dev: dict) -> dict:
     return d
 
 
+# 占位符：允许花括号内有空格（{{ hostname }} 与 {{hostname}} 等价）
+_PLACEHOLDER_RE = re.compile(r"\{\{\s*(\w+)\s*\}\}")
+# 任何残留的 {{...}}（含 {{#if}}/{{#for}}/带空格写法）——用于「模板缺变量」保护
+_LEFTOVER_RE = re.compile(r"\{\{[^{}]*\}\}")
+
+
 def _subst(line: str, v: dict) -> str:
-    """替换单行里的 {{var}}，未定义的保留原样（最后统一检查）。"""
+    """
+    替换单行里的 {{var}}，未定义的保留原样（最后统一检查）。
+
+    ⚠️ 花括号内允许空格（`{{ hostname }}`）：早期实现的正则只认紧贴写法（两个花括号 + 词 + 两个花括号），
+    带空格时既不替换、又不被残留检测发现，会**静默生成含字面占位符的配置**。
+    """
     def rep(m):
         k = m.group(1)
         return str(v[k]) if k in v else m.group(0)
-    return re.sub(r"\{\{(\w+)\}\}", rep, line)
+    return _PLACEHOLDER_RE.sub(rep, line)
 
 
 def _eval_truthy(v: dict, expr: str) -> bool:
@@ -249,9 +260,12 @@ def build_switch_config(template_text: str, dev: dict) -> str:
         raise ValueError("模板使用 vlan_batch，但设备缺少 管理VLAN/接入VLAN")
     cfg = render_template(template_text, vars_map)
     # 模板里残留的未替换占位符 = 模板缺变量 → 抛错提示
-    leftovers = re.findall(r"\{\{(\w+)\}\}", cfg)
+    # 任何残留的 {{...}} 都算模板问题：{{ hostname }}（带空格）、{{#if}}（指令不在行首时整行
+    # 原样输出）都在内 —— 宁可报错，也绝不把字面占位符下发给交换机
+    leftovers = _LEFTOVER_RE.findall(cfg)
     if leftovers:
-        raise ValueError(f"模板缺少变量: {', '.join(sorted(set(leftovers)))}")
+        names = sorted({re.sub(r"\s+", " ", x)[2:-2].strip() for x in leftovers})
+        raise ValueError(f"模板缺少变量: {', '.join(names)}")
     return cfg
 
 

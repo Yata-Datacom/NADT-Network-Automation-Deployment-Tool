@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "nadt"
-version = "1.12.0"
+version = "1.12.1"
 description = "Vendor-neutral network device zero-touch provisioning tool (DHCP option 66/67 + TFTP, Huawei/Cisco/generic presets)"
 readme = "README.md"
 requires-python = ">=3.10"
