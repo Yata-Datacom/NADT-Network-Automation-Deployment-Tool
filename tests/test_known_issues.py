@@ -4,39 +4,39 @@
 目的是：一旦 nadt.py 里对应 bug 被修好，这里会立刻变红，提醒同步更新用例与报告。
 每个用例 docstring 里标了 nadt.py 的行号与现象，详见本次测试交付报告。
 
-修 bug 时请同步更新这些用例（并删掉已修复条目）。
+BUG-1/BUG-2 已修复并改为「验证修复后的行为」，其余仍锁定当前缺陷。
 """
 
 import time
 
+import pytest
 
 import nadt as N
 
 
-def test_known_issue_spaced_placeholder_silently_survives():
-    """BUG-1  nadt.py:89-94（_subst）+ 250-252（残留检测）
+def test_fixed_spaced_placeholder_substituted_and_leftover_raises():
+    """已修（原 BUG-1）`_subst` + 残留检测
 
-    占位符写成 {{ hostname }}（带空格）时：_subst 的正则 \\{\\{(\\w+)\\}\\} 不匹配，
-    残留检测用的也是同一个正则，于是"模板缺变量"保护失效，
-    生成的 .cfg 里会原样留下 {{ hostname }} —— 交换机拿到残缺配置且无人报警。
-    最小复现见下面两行。
+    占位符写成 {{ hostname }}（带空格）曾既不替换、又不被残留检测发现 → 静默生成含字面
+    {{ hostname }} 的 .cfg（交换机拿到残缺配置且无人报警）。现在带空格照样替换；
+    真缺变量则抛 ValueError。
     """
     cfg = N.build_switch_config("sysname {{ hostname }}\nvlan {{mgmt_vlan}}\n",
                                 {"hostname": "SW-1-1F", "mgmt_vlan": "11",
                                  "mgmt_ip": "192.0.2.11"})
-    assert cfg == "sysname {{ hostname }}\nvlan 11\n"      # ← 期望 throw，实际静默通过
+    assert cfg == "sysname SW-1-1F\nvlan 11\n"
+    with pytest.raises(ValueError, match="模板缺少变量"):
+        N.build_switch_config("sysname {{ not_defined }}\n", {"hostname": "SW-1-1F"})
 
 
-def test_known_issue_inline_directive_not_at_line_start_passes_through():
-    """BUG-2  nadt.py:154-165（单行内联块只在行首匹配）+ 250（残留检测抓不到 {{#if）
+def test_fixed_unprocessed_inline_directive_raises():
+    """已修（原 BUG-2）残留检测现在覆盖所有 {{...}}（含 {{#if}}/{{#for}}）
 
-    行首不是 {{#if/{{#for 的内联块整行原样输出，残留检测只匹配 {{word}} 形式
-    （{{#if 不是 \\w+），所以又一次静默产出带模板指令的配置。
+    指令不在行首时曾整行原样输出，且残留检测只认 {{word}} 形式 → 静默把模板指令写进配置。
+    现在任何未处理的 {{...}} 都会抛 ValueError（宁可报错也不下发残缺配置）。
     """
-    cfg = N.build_switch_config("sysname X{{#if a}}Y{{#endif}}Z\n", {"hostname": "SW-1-1F"})
-    assert cfg == "sysname X{{#if a}}Y{{#endif}}Z\n"       # ← 期望渲染/报错，实际原样输出
-    out = N.render_template("description {{#for n from 1 to 2}}p{{n}}{{#endfor}}\n", {})
-    assert out == "description {{#for n from 1 to 2}}p{{n}}{{#endfor}}\n"
+    with pytest.raises(ValueError, match="模板缺少变量"):
+        N.build_switch_config("sysname X{{#if a}}Y{{#endif}}Z\n", {"hostname": "SW-1-1F"})
 
 
 def test_known_issue_else_and_endif_bodies_are_dropped_silently():
