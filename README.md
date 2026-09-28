@@ -1,18 +1,29 @@
-# NADT — Network Automation Deployment Tool（网络自动化交付工具）
+<div align="center">
 
-[![CI](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml)
-[![Build EXE](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml/badge.svg)](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml)
-[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
-[![Python 3.10+](https://img.shields.io/badge/python-3.10%2B-blue.svg)](pyproject.toml)
-[![Platform: Windows](https://img.shields.io/badge/platform-Windows-lightgrey.svg)](#)
+<img src="assets/nadt_logo.png" width="96" alt="NADT" />
 
-**v1.12.2** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#开发与测试--development--tests)
+# NADT 网络自动化交付工具 · Network Automation Deployment Tool
+
+**厂商无关的交换机批量零接触开局（ZTP）工具 —— DHCP option 66/67 + TFTP**<br/>
+<sub>**Vendor-neutral zero-touch provisioning for network switches — DHCP option 66/67 + TFTP (Huawei / Cisco / generic presets).**</sub>
+
+<a href="../../releases/latest"><img src="https://img.shields.io/badge/Download-Releases-5E81AC?style=for-the-badge&logo=github&logoColor=white" alt="Download" /></a>
+<img src="https://img.shields.io/badge/Preview-v1.12.2-BF616A?style=for-the-badge" alt="Preview" />
+<img src="https://img.shields.io/badge/Python-3.10%2B-81A1C1?style=for-the-badge&logo=python&logoColor=white" alt="Python 3.10+" />
+<img src="https://img.shields.io/badge/Platform-Windows-88C0D0?style=for-the-badge&logo=windows11&logoColor=white" alt="Platform: Windows" />
+<img src="https://img.shields.io/badge/License-MIT-8FBCBB?style=for-the-badge" alt="License: MIT" />
+<a href="https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/ci.yml"><img src="https://img.shields.io/github/actions/workflow/status/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/ci?style=for-the-badge&label=CI&color=5E81AC&logo=githubactions&logoColor=white" alt="CI" /></a>
+<a href="https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/actions/workflows/build.yml"><img src="https://img.shields.io/github/actions/workflow/status/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/build?style=for-the-badge&label=Build%20EXE&color=5E81AC&logo=githubactions&logoColor=white" alt="Build EXE" /></a>
+
+</div>
+
+> 给网络工程师与交付/实施人员的**装机工作台**：把交换机开局从「一根一根插 Console 线敲配置」变成「填一张表 → 出全部 `.cfg` → DHCP + TFTP 自动开局」。
+> A provisioning workbench for network engineers and deployment teams: fill in a spreadsheet, generate every `.cfg`, and let DHCP + TFTP bring the switches up.
 
 > ⚠️ **预览版 / PREVIEW** —— 本工具仍在持续完善中（部分 UI 与文档待打磨、少数场景未覆盖），
 > 先放出来供试用与参考。**当前版本 v1.12.2（预览版）**，欢迎反馈问题。
 >
 > 使用前请务必：① 把设备清单里的示例口令/凭据换成你自己的；② 在实验环境验证后再用于生产。
-
 
 A **vendor-neutral, zero-touch provisioning** tool for network switches, built on **DHCP option 66/67 + TFTP**
 (Huawei / Cisco / generic presets). A factory-fresh switch gets an address from DHCP, downloads its own config
@@ -26,12 +37,21 @@ an asyncio **TFTP server**, per-device `.cfg` generation and an **EasyDeploy USB
 > **推荐入口：◎ 工作表 Sheet 页** —— Excel 宏式表格：A 列写配置模板文本、第 1 行 C 列起写参数名、
 > 每行一台设备参数，双击单元格编辑，点「生成脚本」直接出全部 .cfg。**不会用宏也能上手**。
 
-**⬇️ 下载 / Downloads:** [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases)
-（Windows 单文件 exe，免安装、无需 Python）
+**v1.12.2** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#-开发与测试--development--tests)
 
 ---
 
-## English
+## ⬇️ 下载 · Download
+
+**⬇️ 下载 / Downloads:** [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases)
+（Windows 单文件 exe，免安装、无需 Python）
+
+Get the single-file Windows exe from
+[Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases) — no install, no Python required.
+
+---
+
+## 🇬🇧 英文速览 · English
 
 ### What it does
 
@@ -46,7 +66,7 @@ The core engine is **vendor-neutral**: a device list + a `{{placeholder}}` templ
 Vendors are only presets:
 
 | Preset | Bootstrap file | ESN mapping | DHCP output |
-|---|---|---|---|
+| :-- | :-- | :-- | :-- |
 | **Generic** (recommended) | — | bound by MAC | ISC dhcpd / dnsmasq |
 | **Huawei** | `lswnet.cfg` | ✅ EasyDeploy | Huawei VRP option 146 |
 | **Cisco** | `network-confg` | — bound by MAC | ISC dhcpd / dnsmasq |
@@ -82,12 +102,14 @@ No macro skills needed.
 - In-depth docs (Excel template import, USB ZTP package, `lswnet.cfg` version files, DHCP modes,
   thousands-of-devices scale) are in the Chinese sections below.
 
-## 🏭 厂商无关设计
+---
+
+## 🏭 厂商无关设计 · Vendor-neutral by design
 
 NADT 核心引擎与厂商无关（设备清单 + 模板渲染 + cfg 生成），华为只是其中一个"预设"：
 
-| 预设 | 引导文件 | ESN 映射表 | DHCP 输出 |
-|---|---|---|---|
+| 预设 · Preset | 引导文件 · Bootstrap file | ESN 映射表 · ESN mapping | DHCP 输出 · DHCP output |
+| :-- | :-- | :-- | :-- |
 | **通用 Generic（推荐）** | 不生成 | ❌ 按 MAC 绑定 | ISC dhcpd / dnsmasq |
 | **华为 Huawei** | lswnet.cfg | ✅ EasyDeploy | 华为 VRP option 146 |
 | **思科 Cisco** | network-confg | ❌ 按 MAC 绑定 | ISC dhcpd / dnsmasq |
@@ -98,7 +120,9 @@ NADT 核心引擎与厂商无关（设备清单 + 模板渲染 + cfg 生成）�
 - 新增厂商 = 在 `VENDOR_PRESETS` 加一项，核心引擎不用动
 - 模板引擎不限厂家：任何文本配置（VRP/IOS/XR/NX-OS/…）都能用 `{{变量}}` 渲染
 
-## 🚀 快速上手
+---
+
+## 🚀 快速上手 · Five-tab walkthrough
 
 1. **① 设备清单**：导入 CSV/Excel，或手动添加设备（ESN 序列号、主机名、类型、管理 IP）
 2. **② 配置模板**：华为配置模板，`{{占位符}}` 自动替换（可编辑、可保存）
@@ -106,31 +130,33 @@ NADT 核心引擎与厂商无关（设备清单 + 模板渲染 + cfg 生成）�
 4. **④ TFTP 服务器**：启动，根目录指向生成目录
 5. **⑤ 部署说明**：填本机 IP 生成 DHCP option 66/67 配置片段 → 贴到 DHCP 服务器
 
-## 📋 设备清单格式（CSV，首行表头）
+---
+
+## 📋 设备清单格式 · Device list format（CSV，首行表头）
 
 ```csv
 esn,hostname,type,mgmt_ip,mgmt_vlan,access_vlan,mask,gateway,note
 [SN],SW-1F-01,ACCESS,10.10.10.1,10,20,,,1F弱电井
 ```
 
-| 字段 | 说明 |
-|---|---|
-| esn | 设备序列号（华为 `display esn` / 机身铭牌）|
-| hostname | 设备名，同时是生成的 cfg 文件名 |
-| type | **自由文本**，仅用于「类型→模板映射」选择模板（如 ACCESS/CORE），不参与推导 |
-| mgmt_ip | 管理 IP |
-| mgmt_vlan / access_vlan | **必填**（模板用 vlan_batch 时）；留空且模板引用会报错 |
-| mask / gateway | 掩码默认 255.255.255.0；网关留空自动取管理网段 .254 |
+| 字段 · Field | 说明 · Description |
+| :-- | :-- |
+| esn | 设备序列号（华为 `display esn` / 机身铭牌）｜ Device serial number (Huawei `display esn` / chassis label) |
+| hostname | 设备名，同时是生成的 cfg 文件名 ｜ Device name; also the generated cfg file name |
+| type | **自由文本**，仅用于「类型→模板映射」选择模板（如 ACCESS/CORE），不参与推导 ｜ Free text, only used to pick a template via the type→template mapping (e.g. ACCESS/CORE); never derived |
+| mgmt_ip | 管理 IP ｜ Management IP |
+| mgmt_vlan / access_vlan | **必填**（模板用 vlan_batch 时）；留空且模板引用会报错 ｜ Required when the template uses vlan_batch; left empty while referenced it errors out |
+| mask / gateway | 掩码默认 255.255.255.0；网关留空自动取管理网段 .254 ｜ Mask defaults to 255.255.255.0; an empty gateway defaults to .254 of the management subnet |
 
 > 额外列任意加：任何列名都会变成模板 `{{变量}}`（见下节模板语言）。
 
 **💡 批量编号**：主机名/管理IP/ESN/扩展字段支持 `{范围}` 语法，一次添加生成多台：
 
-| 写法 | 生成 |
-|---|---|
-| `SW-{1-254}` | SW-1 … SW-254（254 台，按顺序）|
-| `SW-{1,254}` | 仅 SW-1、SW-254（2 台）|
-| `SW-{01-03}` | SW-01、SW-02、SW-03（零填充）|
+| 写法 · Pattern | 生成 · Expands to |
+| :-- | :-- |
+| `SW-{1-254}` | SW-1 … SW-254（254 台，按顺序）｜ 254 devices, in order |
+| `SW-{1,254}` | 仅 SW-1、SW-254（2 台）｜ only SW-1 and SW-254 |
+| `SW-{01-03}` | SW-01、SW-02、SW-03（零填充）｜ zero-padded |
 | `10.10.10.{1-3}` | 10.10.10.1 … .3 |
 
 多字段联动一一对应：`SW-{1-3}` + 管理IP `10.10.10.{1-3}` → SW-1↔.1、SW-2↔.2、SW-3↔.3。
@@ -154,7 +180,9 @@ CSV/Excel 导入导出照常可用，`devices.db` 可随时删除（下次添加
 `deployed_report.txt`（时间/文件名/客户端 IP + 反查设备清单的 ESN/类型）；
 「重置记录」用于新一批开局前清零。
 
-## 📥 Excel 模板导入（超越宏脚本）
+---
+
+## 📥 Excel 模板导入（超越宏脚本） · Excel template import
 
 支持师傅的 **Excel 宏工作流**（xlsm 模板库格式（模板 sheet + 参数列 + 每行一台设备））：
 - ① 页「导入 Excel 模板」→ 选 xlsm/xlsx
@@ -179,7 +207,9 @@ CSV/Excel 导入导出照常可用，`devices.db` 可随时删除（下次添加
 **扩展字段**：每行一个 `K:V`（回车分隔），支持 `=` / `:` / `：` 三种分隔符，中文 key 也行；
 任何 K 都变成模板 `{{K}}`（例如 `ntp_server:10.0.0.1` → `{{ntp_server}}`）。
 
-## 🧩 模板占位符与模板语言
+---
+
+## 🧩 模板占位符与模板语言 · Template placeholders & language
 
 **变量占位符**：`{{hostname}}` `{{vlan_batch}}` `{{mgmt_vlan}}` `{{mgmt_ip}}` `{{mask}}` `{{access_vlan}}` `{{gateway}}`
 **任意变量**：设备清单 CSV 的**额外列**、或设备"扩展字段"里的 `key=value` 都会变成模板变量
@@ -187,11 +217,11 @@ CSV/Excel 导入导出照常可用，`devices.db` 可随时删除（下次添加
 
 **模板指令**（复杂模板也能批量精确）：
 
-| 指令 | 说明 | 示例 |
-|---|---|---|
-| `{{#if 变量}}` ... `{{#else}}` ... `{{#endif}}` | 条件块，变量非空才输出 | 有 NTP 才加 NTP 配置 |
-| `{{#if 变量=值}}` | 条件等于 | `{{#if type=CORE}}` |
-| `{{#for n from 1 to N}}` ... `{{#endfor}}` | 循环，N 可以是变量 | 批量生成 24/48 个接口块 |
+| 指令 · Directive | 说明 · Notes | 示例 · Example |
+| :-- | :-- | :-- |
+| `{{#if 变量}}` ... `{{#else}}` ... `{{#endif}}` | 条件块，变量非空才输出 ｜ conditional block, emitted only when the variable is non-empty | 有 NTP 才加 NTP 配置 |
+| `{{#if 变量=值}}` | 条件等于 ｜ conditional equals | `{{#if type=CORE}}` |
+| `{{#for n from 1 to N}}` ... `{{#endfor}}` | 循环，N 可以是变量 ｜ loop, N may itself be a variable | 批量生成 24/48 个接口块 |
 
 ```cfg
 # 示例：24/48 口由设备扩展字段 port_count 决定
@@ -209,9 +239,11 @@ interface GigabitEthernet0/0/{{n}}
 
 模板文件：`templates/access-switch.cfg`（默认模板提取自真实园区接入交换机开局配置（**已脱敏**：示例口令请部署前修改））
 
-## 🔧 工作原理
+---
 
-```
+## 🔧 工作原理 · How it works
+
+```text
 【DHCP 开局（通用）】设备开机 → DHCP(option 66=文件服务器, option 67=引导文件)
           → 下载配置 → 应用 → 开局完成
           通用/思科: DHCP 按 MAC 绑定，每台拿自己的 主机名.cfg
@@ -223,7 +255,9 @@ interface GigabitEthernet0/0/{{n}}
           → 从 U 盘(file:/usb:)加载 SYSTEM-CONFIG → 开局完成
 ```
 
-## 💾 U盘 ZTP 包（EasyDeploy USB 开局）
+---
+
+## 💾 U盘 ZTP 包（EasyDeploy USB 开局） · EasyDeploy USB package
 
 ③ 页「生成 U盘 ZTP 包」→ 输出 `usb_config.ini` + 全部 `.cfg` 到 `输出目录/usb/`：
 
@@ -246,11 +280,13 @@ STACK-MEMBER-ID=2                                ; 堆叠：扩展字段 stack_m
 - 不用 DHCP 时 FILESERVER 保持 `file:/usb:`；FILESERVER 也可填 ftp/sftp/tftp 地址走网络
 - usb_config.ini 用 CRLF 换行（华为要求），文件名必须叫 `usb_config.ini`，放 U 盘**根目录**
 
-## 📦 lswnet.cfg 版本文件 / 补丁（复杂场景）
+---
+
+## 📦 lswnet.cfg 版本文件 / 补丁 · version file & patch（复杂场景）
 
 实战格式（核心交换机一起刷版本+补丁）：
 
-```
+```text
 esn=[SN];vrpfile=[SOFTWARE].cc;patchfile=[PATCH].pat;cfgfile=[HOSTNAME].cfg;
 ```
 
@@ -258,28 +294,34 @@ esn=[SN];vrpfile=[SOFTWARE].cc;patchfile=[PATCH].pat;cfgfile=[HOSTNAME].cfg;
 - 设备扩展字段 `vrp_file` / `patch_file` 可单台覆盖
 - 设备清单 CSV 也可直接加 vrp_file / patch_file 列
 
-## 🔌 DHCP 模式（⑤ 部署说明）
+---
+
+## 🔌 DHCP 模式 · DHCP modes（⑤ 部署说明）
 
 - **模式 146（华为 EasyDeploy 标准，默认）**：
   `option 66 ascii sftp://user:pass@ip:port` + `option 146 ascii opervalue=1;delaytime=0;netfile=lswnet.cfg;`
 - **模式 67（通用 PXE）**：`option 66 ip-address IP` + `option 67 ascii lswnet.cfg`
 - 华为 S 系列交换机 EasyDeploy 认的是 **option 146**；其它厂家（或通用 DHCP 服务器）用 67
 
-## 🏗 超大规模（几千台）能力
+---
 
-| 能力 | 说明 |
-|---|---|
-| **异步 TFTP 引擎** | asyncio 单事件循环多路复用，支持上千并发传输（对比旧版每请求一线程）；文件内存缓存预热（总量超 200MB 自动改按需加载） |
-| **并发上限** | TFTP 页可调（默认 500），超限拒绝并提示客户端重试，防断电恢复时的「惊群效应」压垮服务器 |
-| **并行生成** | 多线程渲染 + 进度条实时显示 N/总数；失败自动汇总导出 `failures.csv` |
-| **批量校验** | 生成前自动查重复 ESN/IP/主机名等，杜绝千台开局事故 |
-| **设备库持久化** | SQLite 存储，重启不丢；搜索/分页支撑大清单操作 |
-| **增量部署建议** | 千台场景建议：DHCP option 66 指向多台 TFTP（轮询），或按楼层/区域分段开局错峰 |
+## 🏗 超大规模（几千台）能力 · Large-scale (thousands of switches)
+
+| 能力 · Capability | 说明 · Notes | English |
+| :-- | :-- | :-- |
+| **异步 TFTP 引擎** | asyncio 单事件循环多路复用，支持上千并发传输（对比旧版每请求一线程）；文件内存缓存预热（总量超 200MB 自动改按需加载） | asyncio single event loop, 1000+ concurrent transfers (vs. thread-per-request); prewarmed in-memory cache (falls back to on-demand above 200 MB total) |
+| **并发上限** | TFTP 页可调（默认 500），超限拒绝并提示客户端重试，防断电恢复时的「惊群效应」压垮服务器 | Adjustable on the TFTP tab (default 500); over-limit clients are rejected and told to retry, so a thundering herd after a power event cannot crush the server |
+| **并行生成** | 多线程渲染 + 进度条实时显示 N/总数；失败自动汇总导出 `failures.csv` | Multi-threaded rendering with live N/total progress; failures are summarised into `failures.csv` |
+| **批量校验** | 生成前自动查重复 ESN/IP/主机名等，杜绝千台开局事故 | Pre-generation duplicate ESN/IP/hostname checks to rule out thousand-switch incidents |
+| **设备库持久化** | SQLite 存储，重启不丢；搜索/分页支撑大清单操作 | SQLite storage survives restarts; search and paging keep large device lists workable |
+| **增量部署建议** | 千台场景建议：DHCP option 66 指向多台 TFTP（轮询），或按楼层/区域分段开局错峰 | At thousand-device scale: point DHCP option 66 at several TFTP servers (round-robin), or stagger rollouts by floor/zone |
 
 **瓶颈提示**：单机 TFTP 受网卡带宽限制（百兆口约 100 台并发饱和），千台同开建议 option 66
 轮询 2-3 台服务器，或分批开局（如按楼栋不同 DHCP scope）。
 
-## 📦 打包
+---
+
+## 📦 打包 · Packaging
 
 ```bash
 python -m PyInstaller --clean --noconfirm NADT.spec
@@ -287,7 +329,9 @@ python -m PyInstaller --clean --noconfirm NADT.spec
 # 首次运行自动在 exe 旁生成 templates/ 和 output/
 ```
 
-## ⚠️ 注意
+---
+
+## ⚠️ 注意事项 · Notes & caveats
 
 - TFTP 端口 69 需在防火墙放行；交换机管理网段与 DHCP/TFTP 必须互通
 - 仅用于授权设备的开局交付，请勿用于未授权网络
@@ -295,7 +339,7 @@ python -m PyInstaller --clean --noconfirm NADT.spec
 
 ---
 
-## 开发与测试 / Development & Tests
+## 🧪 开发与测试 · Development & Tests
 
 ```bash
 # 安装（含开发依赖：pytest / ruff / openpyxl）
@@ -315,3 +359,33 @@ python -m PyInstaller --clean --noconfirm NADT.spec
 - 核心只用标准库；`openpyxl` 是可选依赖（设备清单 xlsx / Excel 模板导入导出），缺失时界面会提示而非崩溃
 - CI：`.github/workflows/ci.yml`（Windows 跑 pytest、Linux 跑 ruff）；`.github/workflows/build.yml`（打 tag 或手动触发 → 产出 exe artifact）
 - 版本号在 `pyproject.toml` 与 `nadt.__version__` **两处**，必须保持一致（有测试守着）
+
+---
+
+## ⚖️ 许可与声明 · License & disclaimer
+
+| 项目 · Item | 说明 · Details |
+| :-- | :-- |
+| 许可 · License | **MIT** —— 见 [LICENSE](LICENSE) |
+| 语言与运行要求 · Runtime | Python 3.10+（见 [pyproject.toml](pyproject.toml)），主要在 Windows 上验证 |
+| 版本状态 · Status | **v1.12.2 预览版 / Preview** —— 生产使用前请在实验环境验证 |
+| 使用范围 · Scope | 仅用于授权设备的开局交付，请勿用于未授权网络 |
+
+**标签 · Topics：**
+<img src="https://img.shields.io/badge/cisco-5E81AC?style=for-the-badge" alt="cisco" />
+<img src="https://img.shields.io/badge/dhcp-81A1C1?style=for-the-badge" alt="dhcp" />
+<img src="https://img.shields.io/badge/easydeploy-8FBCBB?style=for-the-badge" alt="easydeploy" />
+<img src="https://img.shields.io/badge/github--actions-88C0D0?style=for-the-badge" alt="github-actions" />
+<img src="https://img.shields.io/badge/huawei-5E81AC?style=for-the-badge" alt="huawei" />
+<img src="https://img.shields.io/badge/network--automation-81A1C1?style=for-the-badge" alt="network-automation" />
+<img src="https://img.shields.io/badge/pytest-8FBCBB?style=for-the-badge" alt="pytest" />
+<img src="https://img.shields.io/badge/python-88C0D0?style=for-the-badge" alt="python" />
+<img src="https://img.shields.io/badge/tftp-5E81AC?style=for-the-badge" alt="tftp" />
+<img src="https://img.shields.io/badge/tkinter-81A1C1?style=for-the-badge" alt="tkinter" />
+<img src="https://img.shields.io/badge/windows-8FBCBB?style=for-the-badge" alt="windows" />
+<img src="https://img.shields.io/badge/zero--touch--provisioning-88C0D0?style=for-the-badge" alt="zero-touch-provisioning" />
+<img src="https://img.shields.io/badge/ztp-5E81AC?style=for-the-badge" alt="ztp" />
+
+<div align="center">
+<sub>MIT License · Yata-Datacom / NADT-Network-Automation-Deployment-Tool</sub>
+</div>
