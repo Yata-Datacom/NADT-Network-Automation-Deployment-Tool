@@ -2,10 +2,11 @@
 
 <img src="assets/nadt_logo.png" width="96" alt="NADT" />
 
-# NADT 网络自动化交付工具 · Network Automation Deployment Tool
+# NADT Network Automation Deployment Tool
 
-**厂商无关的交换机批量零接触开局（ZTP）工具 —— DHCP option 66/67 + TFTP**<br/>
-<sub>**Vendor-neutral zero-touch provisioning for network switches — DHCP option 66/67 + TFTP (Huawei / Cisco / generic presets).**</sub>
+**Vendor-neutral zero-touch provisioning for network switches (ZTP) — DHCP option 66/67 + TFTP (Huawei / Cisco / generic presets).**
+
+<sub>[**English**](README.md) · [**简体中文**](README.zh-CN.md)</sub>
 
 <a href="../../releases/latest"><img src="https://img.shields.io/badge/Download-Releases-5E81AC?style=for-the-badge&logo=github&logoColor=white" alt="Download" /></a>
 <img src="https://img.shields.io/badge/Preview-v1.12.2-BF616A?style=for-the-badge" alt="Preview" />
@@ -17,13 +18,12 @@
 
 </div>
 
-> 给网络工程师与交付/实施人员的**装机工作台**：把交换机开局从「一根一根插 Console 线敲配置」变成「填一张表 → 出全部 `.cfg` → DHCP + TFTP 自动开局」。
 > A provisioning workbench for network engineers and deployment teams: fill in a spreadsheet, generate every `.cfg`, and let DHCP + TFTP bring the switches up.
 
-> ⚠️ **预览版 / PREVIEW** —— 本工具仍在持续完善中（部分 UI 与文档待打磨、少数场景未覆盖），
-> 先放出来供试用与参考。**当前版本 v1.12.2（预览版）**，欢迎反馈问题。
+> ⚠️ **PREVIEW** — this tool is still being refined (some UI and docs still need polish, a few scenarios are not covered yet);
+> it is published early for trial and reference. **Current version v1.12.2 (preview)** — feedback welcome.
 >
-> 使用前请务必：① 把设备清单里的示例口令/凭据换成你自己的；② 在实验环境验证后再用于生产。
+> Before use, please: ① replace the sample passwords/credentials in the device list with your own; ② validate in a lab before production.
 
 A **vendor-neutral, zero-touch provisioning** tool for network switches, built on **DHCP option 66/67 + TFTP**
 (Huawei / Cisco / generic presets). A factory-fresh switch gets an address from DHCP, downloads its own config
@@ -31,27 +31,18 @@ via option 66/67, applies it, and is ready — no console cable, no manual typin
 workbench (template text in column A, parameter names in row 1, one device per row → every `.cfg` in one click),
 an asyncio **TFTP server**, per-device `.cfg` generation and an **EasyDeploy USB package** builder.
 
-> 基于 **DHCP option 66/67 + TFTP** 的**厂商无关**交换机批量**零接触开局**（Zero-Touch Provisioning）工具（华为/思科/通用）。
-> 设备出厂开机 → DHCP 自动获取 IP → 按 option 66/67 下载配置 → 自动应用 → 开局完成。
->
-> **推荐入口：◎ 工作表 Sheet 页** —— Excel 宏式表格：A 列写配置模板文本、第 1 行 C 列起写参数名、
-> 每行一台设备参数，双击单元格编辑，点「生成脚本」直接出全部 .cfg。**不会用宏也能上手**。
-
-**v1.12.2** · [CHANGELOG](CHANGELOG.md) · [开发与测试](#-开发与测试--development--tests)
+**v1.12.2** · [CHANGELOG](CHANGELOG.md) · [Development & Tests](#-development--tests)
 
 ---
 
-## ⬇️ 下载 · Download
+## ⬇️ Download
 
-**⬇️ 下载 / Downloads:** [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases)
-（Windows 单文件 exe，免安装、无需 Python）
-
-Get the single-file Windows exe from
+Download the single-file Windows exe from
 [Releases](https://github.com/Yata-Datacom/NADT-Network-Automation-Deployment-Tool/releases) — no install, no Python required.
 
 ---
 
-## 🇬🇧 英文速览 · English
+## 🧭 Overview
 
 ### What it does
 
@@ -100,131 +91,133 @@ No macro skills needed.
 - This is a **preview** release — please validate in a lab before production use.
 - Replace the sample credentials in the device list and templates with your own first.
 - In-depth docs (Excel template import, USB ZTP package, `lswnet.cfg` version files, DHCP modes,
-  thousands-of-devices scale) are in the Chinese sections below.
+  thousands-of-devices scale) are in the sections below.
 
 ---
 
-## 🏭 厂商无关设计 · Vendor-neutral by design
+## 🏭 Vendor-neutral by design
 
-NADT 核心引擎与厂商无关（设备清单 + 模板渲染 + cfg 生成），华为只是其中一个"预设"：
+The NADT core engine is vendor-neutral (device list + template rendering + cfg generation); Huawei is just one of the presets:
 
-| 预设 · Preset | 引导文件 · Bootstrap file | ESN 映射表 · ESN mapping | DHCP 输出 · DHCP output |
+| Preset | Bootstrap file | ESN mapping | DHCP output |
 | :-- | :-- | :-- | :-- |
-| **通用 Generic（推荐）** | 不生成 | ❌ 按 MAC 绑定 | ISC dhcpd / dnsmasq |
-| **华为 Huawei** | lswnet.cfg | ✅ EasyDeploy | 华为 VRP option 146 |
-| **思科 Cisco** | network-confg | ❌ 按 MAC 绑定 | ISC dhcpd / dnsmasq |
+| **Generic** (recommended) | — | ❌ bound by MAC | ISC dhcpd / dnsmasq |
+| **Huawei** | `lswnet.cfg` | ✅ EasyDeploy | Huawei VRP option 146 |
+| **Cisco** | `network-confg` | ❌ bound by MAC | ISC dhcpd / dnsmasq |
 
-- ③ 页选预设自动填参数，**全部可手动覆盖**（引导文件名、映射表开关）
-- 通用模式：DHCP 按设备 MAC 绑定下发各自 cfg（`option bootfile-name "主机名.cfg"`）——思科 auto-install 就是这样
-- 华为模式：ESN 映射表 lswnet.cfg + option 146 netfile——EasyDeploy 专有玩法
-- 新增厂商 = 在 `VENDOR_PRESETS` 加一项，核心引擎不用动
-- 模板引擎不限厂家：任何文本配置（VRP/IOS/XR/NX-OS/…）都能用 `{{变量}}` 渲染
-
----
-
-## 🚀 快速上手 · Five-tab walkthrough
-
-1. **① 设备清单**：导入 CSV/Excel，或手动添加设备（ESN 序列号、主机名、类型、管理 IP）
-2. **② 配置模板**：华为配置模板，`{{占位符}}` 自动替换（可编辑、可保存）
-3. **③ 生成脚本**：一键生成每台设备的 `.cfg` + `lswnet.cfg`（ESN 映射表）
-4. **④ TFTP 服务器**：启动，根目录指向生成目录
-5. **⑤ 部署说明**：填本机 IP 生成 DHCP option 66/67 配置片段 → 贴到 DHCP 服务器
+- Picking a preset on tab ③ fills the parameters in automatically, and **every one of them can be overridden by hand** (bootstrap file name, mapping-table toggle)
+- Generic mode: DHCP binds each device's own cfg by MAC (`option bootfile-name "主机名.cfg"`) — that is how Cisco auto-install works
+- Huawei mode: ESN mapping table lswnet.cfg + option 146 netfile — the EasyDeploy-specific way
+- Adding a vendor = one entry in `VENDOR_PRESETS`; the core engine does not have to change
+- The template engine is vendor-agnostic: any text config (VRP/IOS/XR/NX-OS/…) can be rendered with `{{变量}}`
 
 ---
 
-## 📋 设备清单格式 · Device list format（CSV，首行表头）
+## 🚀 Five-tab walkthrough
+
+1. **① Device list** — import a CSV/Excel file, or add devices by hand (ESN serial number, hostname, type, management IP)
+2. **② Config template** — the Huawei config template, with automatic `{{placeholder}}` / `{{占位符}}` substitution (editable, saveable)
+3. **③ Generate scripts** — one click generates every device's `.cfg` plus `lswnet.cfg` (the ESN mapping table)
+4. **④ TFTP server** — start it with the root directory pointed at the output directory
+5. **⑤ Deployment notes** — enter this machine's IP to generate a DHCP option 66/67 snippet → paste it into your DHCP server
+
+---
+
+## 📋 Device list format (CSV, header row first)
 
 ```csv
 esn,hostname,type,mgmt_ip,mgmt_vlan,access_vlan,mask,gateway,note
 [SN],SW-1F-01,ACCESS,10.10.10.1,10,20,,,1F弱电井
 ```
 
-| 字段 · Field | 说明 · Description |
+| Field | Description |
 | :-- | :-- |
-| esn | 设备序列号（华为 `display esn` / 机身铭牌）｜ Device serial number (Huawei `display esn` / chassis label) |
-| hostname | 设备名，同时是生成的 cfg 文件名 ｜ Device name; also the generated cfg file name |
-| type | **自由文本**，仅用于「类型→模板映射」选择模板（如 ACCESS/CORE），不参与推导 ｜ Free text, only used to pick a template via the type→template mapping (e.g. ACCESS/CORE); never derived |
-| mgmt_ip | 管理 IP ｜ Management IP |
-| mgmt_vlan / access_vlan | **必填**（模板用 vlan_batch 时）；留空且模板引用会报错 ｜ Required when the template uses vlan_batch; left empty while referenced it errors out |
-| mask / gateway | 掩码默认 255.255.255.0；网关留空自动取管理网段 .254 ｜ Mask defaults to 255.255.255.0; an empty gateway defaults to .254 of the management subnet |
+| esn | Device serial number (Huawei `display esn` / chassis label) |
+| hostname | Device name; also the generated cfg file name |
+| type | **Free text**, only used to pick a template via the type→template mapping (e.g. ACCESS/CORE); never derived |
+| mgmt_ip | Management IP |
+| mgmt_vlan / access_vlan | **Required** when the template uses vlan_batch; left empty while the template still references them it errors out |
+| mask / gateway | Mask defaults to 255.255.255.0; an empty gateway defaults to .254 of the management subnet |
 
-> 额外列任意加：任何列名都会变成模板 `{{变量}}`（见下节模板语言）。
+> Extra columns are free: any column name becomes a template `{{变量}}` / `{{variables}}` (see the template language section below).
 
-**💡 批量编号**：主机名/管理IP/ESN/扩展字段支持 `{范围}` 语法，一次添加生成多台：
+**💡 Batch numbering**: hostnames / management IPs / ESNs / extended fields support `{范围}` range syntax, generating many devices in one go:
 
-| 写法 · Pattern | 生成 · Expands to |
+| Pattern | Expands to |
 | :-- | :-- |
-| `SW-{1-254}` | SW-1 … SW-254（254 台，按顺序）｜ 254 devices, in order |
-| `SW-{1,254}` | 仅 SW-1、SW-254（2 台）｜ only SW-1 and SW-254 |
-| `SW-{01-03}` | SW-01、SW-02、SW-03（零填充）｜ zero-padded |
+| `SW-{1-254}` | SW-1 … SW-254 (254 devices, in order) |
+| `SW-{1,254}` | only SW-1 and SW-254 (2 devices) |
+| `SW-{01-03}` | SW-01, SW-02, SW-03 (zero-padded) |
 | `10.10.10.{1-3}` | 10.10.10.1 … .3 |
 
-多字段联动一一对应：`SW-{1-3}` + 管理IP `10.10.10.{1-3}` → SW-1↔.1、SW-2↔.2、SW-3↔.3。
-生成超过 20 台会先确认；超过 500 台会拒绝（请分批添加）。
+Multi-field patterns map one-to-one: `SW-{1-3}` + management IPs `10.10.10.{1-3}` → SW-1↔.1, SW-2↔.2, SW-3↔.3.
+Generating more than 20 devices asks for confirmation first; more than 500 is refused (please add them in batches).
 
-**🔍 搜索与分页**：设备表支持关键字搜索（ESN/主机名/IP/类型，无视大小写）和分页
-（每页 100/200/500/1000，右下角翻页），几千台设备也能流畅操作。
+**🔍 Search and paging**: the device table supports keyword search (ESN/hostname/IP/type, case-insensitive) and paging
+(100/200/500/1000 rows per page, pager in the bottom-right corner), so even several thousand devices stay responsive.
 
-**✅ 批量校验**：点「校验 Validate」或生成前自动检查——重复 ESN/IP/主机名、IP 格式错误、
-缺必填字段（错误级别）；缺 ESN（警告级别）。有错误时生成会先弹确认，防止带着冲突数据开局。
+**✅ Batch validation**: click **Validate**, or let the pre-generation check run automatically — duplicate ESN/IP/hostname,
+malformed IPs and missing required fields are errors, a missing ESN is a warning. When errors exist, generation asks for
+confirmation first, so you never bring switches up with conflicting data.
 
-**💾 本地设备库**：设备清单自动保存到 `devices.db`（SQLite），关闭重开自动恢复；
-CSV/Excel 导入导出照常可用，`devices.db` 可随时删除（下次添加自动重建）。
+**💾 Local device library**: the device list is saved automatically to `devices.db` (SQLite) and restored when the app is
+reopened; CSV/Excel import and export keep working, and `devices.db` can be deleted at any time (it is rebuilt on the next add).
 
-**↶ 撤销（Undo）**：工具栏「↶ 撤销」或 Ctrl+Z，误删/误改/清空 20 步内可恢复。
+**↶ Undo**: the **↶ Undo** toolbar button or Ctrl+Z rolls back a mistaken delete/edit/clear, up to 20 steps.
 
-**📦 生成自动归档**：默认每次生成存到 `输出目录/时间戳/` 子目录，保留最近 10 次自动清理；
-取消勾选「自动归档」则直接输出到所选目录。
+**📦 Auto-archive on generate**: by default each run is written to a `输出目录/时间戳/` subdirectory with the last 10 runs
+kept automatically; untick **Auto-archive** to write straight into the chosen directory.
 
-**🏁 TFTP 开局完成清单**：④ 页实时显示"已开局 N 台"；「生成开局清单」输出
-`deployed_report.txt`（时间/文件名/客户端 IP + 反查设备清单的 ESN/类型）；
-「重置记录」用于新一批开局前清零。
-
----
-
-## 📥 Excel 模板导入（超越宏脚本） · Excel template import
-
-支持师傅的 **Excel 宏工作流**（xlsm 模板库格式（模板 sheet + 参数列 + 每行一台设备））：
-- ① 页「导入 Excel 模板」→ 选 xlsm/xlsx
-- 识别规则：每个 sheet 一个模板（A1 为【模板名】或 A 列含 `{{变量}}`）：
-  - **A 列第 2 行起** = 配置模板文本（`#` 分隔行保留）
-  - **第 1 行 C 列起** = 参数名（`{{sysname}}`）
-  - **第 2 行起每行** = 一台设备（各参数值）
-- 导入后：模板进②模板库（类型=sheet名自动映射），设备进①清单（参数进扩展字段），
-  直接③生成脚本即可——**不再需要 VBA 宏**
-- 自动跳过 主页/模板数据/帮助说明 等非模板 sheet
-
-**列映射导入**：「导入 CSV/Excel」会先弹列映射窗口（自动识别表头，可手动把任意列
-指定为主机名/IP/类型/忽略/扩展字段），表头不规范也能导。
-
-**生成 Excel 模板**：① 页「生成 Excel 模板」→ 保存一个 xlsx：sheet1「示例模板」
-（A 列配置文本 + 参数名 + 3 台示例设备，改内容就能用），sheet2「操作方式」
-（结构/步骤/变量语法/注意事项）。填好后点「导入 Excel 模板」即可导入。
-
-⚠ 导入后建议先点「校验 Validate」：跨 sheet 同名设备、模板变量拼写错误（如原宏里
-`{{vlaif1004}}` 与参数 `vlanif1004` 不一致）会明确列出来——宏时代这些错误是静默的。
-
-**扩展字段**：每行一个 `K:V`（回车分隔），支持 `=` / `:` / `：` 三种分隔符，中文 key 也行；
-任何 K 都变成模板 `{{K}}`（例如 `ntp_server:10.0.0.1` → `{{ntp_server}}`）。
+**🏁 TFTP deployment checklist**: tab ④ shows "已开局 N 台" (N switches up) live; **Generate deployment list** writes
+`deployed_report.txt` (time / file name / client IP plus the ESN and type looked up from the device list);
+**Reset record** clears the counters before a new batch.
 
 ---
 
-## 🧩 模板占位符与模板语言 · Template placeholders & language
+## 📥 Excel template import (beyond macro scripts)
 
-**变量占位符**：`{{hostname}}` `{{vlan_batch}}` `{{mgmt_vlan}}` `{{mgmt_ip}}` `{{mask}}` `{{access_vlan}}` `{{gateway}}`
-**任意变量**：设备清单 CSV 的**额外列**、或设备"扩展字段"里的 `key=value` 都会变成模板变量
-（例如列 `ntp_server` → 模板里写 `{{ntp_server}}`）。
+Supports the **Excel macro workflow** field engineers already use (xlsm template-library format: a template sheet +
+parameter columns + one device per row):
+- Tab ① **Import Excel template** → pick an xlsm/xlsx file
+- Recognition rules: each sheet is one template (A1 holds the template name, or column A contains `{{变量}}`):
+  - **Column A, from row 2** = config template text (`#` separator lines are kept)
+  - **Row 1, from column C** = parameter names (`{{sysname}}`)
+  - **Every row from row 2** = one device (its parameter values)
+- After import: templates go into the ② template library (type = sheet name, mapped automatically), devices go into the
+  ① list (parameters become extended fields); just generate on ③ — **no VBA macro needed any more**
+- Non-template sheets such as 主页/模板数据/帮助说明 are skipped automatically
 
-**模板指令**（复杂模板也能批量精确）：
+**Column-mapping import**: **Import CSV/Excel** first opens a column-mapping window (headers are auto-detected; you can
+map any column to hostname/IP/type/ignore/extended field by hand), so non-standard headers still import.
 
-| 指令 · Directive | 说明 · Notes | 示例 · Example |
+**Generate Excel template**: tab ① **Generate Excel template** → saves an xlsx: sheet1 示例模板
+(column A config text + parameter names + 3 sample devices — edit it and it is ready to use), sheet2 操作方式
+(structure/steps/variable syntax/caveats). Once filled in, click **Import Excel template** to import it.
+
+⚠ After importing, run **Validate** first: same-named devices across sheets and misspelled template variables (e.g. the
+old macro's `{{vlaif1004}}` versus the parameter `vlanif1004`) are listed explicitly — in the macro era these errors were silent.
+
+**Extended fields**: one `K:V` per line (Enter-separated), with `=` / `:` / `：` accepted as the separator, Chinese keys
+included; any K becomes a template `{{K}}` (for example `ntp_server:10.0.0.1` → `{{ntp_server}}`).
+
+---
+
+## 🧩 Template placeholders & language
+
+**Variable placeholders**: `{{hostname}}` `{{vlan_batch}}` `{{mgmt_vlan}}` `{{mgmt_ip}}` `{{mask}}` `{{access_vlan}}` `{{gateway}}`
+**Any variable**: **extra columns** in the device-list CSV, or `key=value` pairs in a device's "extended fields", all become
+template variables (e.g. the column `ntp_server` → write `{{ntp_server}}` in the template).
+
+**Template directives** (so even complex templates stay precise at scale):
+
+| Directive | Notes | Example |
 | :-- | :-- | :-- |
-| `{{#if 变量}}` ... `{{#else}}` ... `{{#endif}}` | 条件块，变量非空才输出 ｜ conditional block, emitted only when the variable is non-empty | 有 NTP 才加 NTP 配置 |
-| `{{#if 变量=值}}` | 条件等于 ｜ conditional equals | `{{#if type=CORE}}` |
-| `{{#for n from 1 to N}}` ... `{{#endfor}}` | 循环，N 可以是变量 ｜ loop, N may itself be a variable | 批量生成 24/48 个接口块 |
+| `{{#if 变量}}` ... `{{#else}}` ... `{{#endif}}` | conditional block, emitted only when the variable is non-empty | add NTP config only when NTP is set |
+| `{{#if 变量=值}}` | conditional equals | `{{#if type=CORE}}` |
+| `{{#for n from 1 to N}}` ... `{{#endfor}}` | loop, N may itself be a variable | generate 24/48 interface blocks |
 
 ```cfg
-# 示例：24/48 口由设备扩展字段 port_count 决定
+# Example: the 24/48 ports are driven by the device extended field port_count
 {{#for n from 1 to {{port_count}}}}
 interface GigabitEthernet0/0/{{n}}
  port link-type access
@@ -233,33 +226,34 @@ interface GigabitEthernet0/0/{{n}}
 {{#endfor}}
 ```
 
-**模板库**：`templates/` 目录放多个 `.cfg` 模板，② 页可切换/新建/删除；
-**类型→模板映射**（`templates/mapping.json`）：type 字段自由定义（ACCESS / CORE / 按项目任意），
-在②页把类型映射到对应模板，生成时自动按类型选模板。
+**Template library**: put multiple `.cfg` templates in the `templates/` directory; tab ② switches between, creates and deletes them.
+**Type→template mapping** (`templates/mapping.json`): the type field is free-form (ACCESS / CORE / anything project-specific) —
+map types to templates on tab ② and generation picks the right template by type.
 
-模板文件：`templates/access-switch.cfg`（默认模板提取自真实园区接入交换机开局配置（**已脱敏**：示例口令请部署前修改））
+Template file: `templates/access-switch.cfg` (the default template, extracted from a real campus access-switch deployment
+config (**sanitised**: change the sample passwords before deploying))
 
 ---
 
-## 🔧 工作原理 · How it works
+## 🔧 How it works
 
 ```text
-【DHCP 开局（通用）】设备开机 → DHCP(option 66=文件服务器, option 67=引导文件)
-          → 下载配置 → 应用 → 开局完成
-          通用/思科: DHCP 按 MAC 绑定，每台拿自己的 主机名.cfg
-          华为:      下载 lswnet.cfg ESN 映射表，按序列号找自己的 cfg
+[DHCP provisioning (generic)] device boots → DHCP (option 66 = file server, option 67 = boot file)
+          → download config → apply → provisioning done
+          Generic/Cisco: DHCP binds by MAC, each device fetches its own hostname.cfg
+          Huawei:       downloads the lswnet.cfg ESN mapping table, finds its own cfg by serial number
 
-【U盘 ZTP 开局（华为 EasyDeploy）】无 DHCP 也能干：
-          生成 usb_config.ini（EasyDeploy 格式）→ 拷 U 盘根目录
-          → 插交换机开机 → 按 ESN/MAC 匹配 [DEVICEn DESCRIPTION] 块
-          → 从 U 盘(file:/usb:)加载 SYSTEM-CONFIG → 开局完成
+[USB-stick ZTP (Huawei EasyDeploy)] works with no DHCP at all:
+          generate usb_config.ini (EasyDeploy format) → copy to the USB root
+          → insert into the switch and power on → match the [DEVICEn DESCRIPTION] block by ESN/MAC
+          → load SYSTEM-CONFIG from the USB stick (file:/usb:) → provisioning done
 ```
 
 ---
 
-## 💾 U盘 ZTP 包（EasyDeploy USB 开局） · EasyDeploy USB package
+## 💾 EasyDeploy USB package
 
-③ 页「生成 U盘 ZTP 包」→ 输出 `usb_config.ini` + 全部 `.cfg` 到 `输出目录/usb/`：
+Tab ③ **Generate USB ZTP package** → writes `usb_config.ini` plus every `.cfg` into `输出目录/usb/`:
 
 ```ini
 ;BEGIN DC
@@ -268,110 +262,111 @@ FILESERVER=file:/usb:
 [DEVICE0 DESCRIPTION]
 ESN=[SN]
 DEVICETYPE=DEFAULT
-SYSTEM-SOFTWARE=[SOFTWARE].cc   ; 可选，③页 SYSTEM-SOFTWARE 默认
-SYSTEM-CONFIG=[HOSTNAME].cfg       ; 自动取设备主机名
-SYSTEM-PAT=[PATCH].PAT           ; 可选
-STACK-MEMBER-ID=2                                ; 堆叠：扩展字段 stack_member_id
+SYSTEM-SOFTWARE=[SOFTWARE].cc   ; optional, ③-page SYSTEM-SOFTWARE default
+SYSTEM-CONFIG=[HOSTNAME].cfg       ; taken from the device hostname
+SYSTEM-PAT=[PATCH].PAT           ; optional
+STACK-MEMBER-ID=2                                ; stacking: extended field stack_member_id
 ;END DC
 ```
 
-- 每台设备一个 `[DEVICEn DESCRIPTION]` 块（n 从 0 开始），按 ESN 匹配；无 ESN 的设备用 MAC（设备清单加 mac 列）
-- 堆叠设备：扩展字段填 `stack_member_id=成员ID`（多成员在清单里加多行，同一配置不同 ESN/成员ID）
-- 不用 DHCP 时 FILESERVER 保持 `file:/usb:`；FILESERVER 也可填 ftp/sftp/tftp 地址走网络
-- usb_config.ini 用 CRLF 换行（华为要求），文件名必须叫 `usb_config.ini`，放 U 盘**根目录**
+- One `[DEVICEn DESCRIPTION]` block per device (n starts at 0), matched by ESN; devices without an ESN use MAC (add a mac column to the device list)
+- Stacked devices: put the member id in the extended field, `stack_member_id=成员ID` (add one row per member to the list — same config, different ESN/member id)
+- With no DHCP, keep FILESERVER as `file:/usb:`; FILESERVER can also hold an ftp/sftp/tftp address to go over the network
+- usb_config.ini uses CRLF line endings (Huawei requires it); the file must be named `usb_config.ini` and live in the USB **root directory**
 
 ---
 
-## 📦 lswnet.cfg 版本文件 / 补丁 · version file & patch（复杂场景）
+## 📦 lswnet.cfg version file & patch (complex scenarios)
 
-实战格式（核心交换机一起刷版本+补丁）：
+Real-world format (core switches flashing a version plus a patch in one go):
 
 ```text
 esn=[SN];vrpfile=[SOFTWARE].cc;patchfile=[PATCH].pat;cfgfile=[HOSTNAME].cfg;
 ```
 
-- ③ 页「lswnet 版本文件 vrpfile / 补丁 patchfile」填全局默认；留空则不含该字段
-- 设备扩展字段 `vrp_file` / `patch_file` 可单台覆盖
-- 设备清单 CSV 也可直接加 vrp_file / patch_file 列
+- Tab ③ **lswnet version file vrpfile / patch patchfile** sets the global default; leave it empty to omit that field
+- The device extended fields `vrp_file` / `patch_file` override it for a single device
+- The device-list CSV can also carry vrp_file / patch_file columns directly
 
 ---
 
-## 🔌 DHCP 模式 · DHCP modes（⑤ 部署说明）
+## 🔌 DHCP modes (⑤ deployment notes)
 
-- **模式 146（华为 EasyDeploy 标准，默认）**：
+- **Mode 146 (Huawei EasyDeploy standard, default)**:
   `option 66 ascii sftp://user:pass@ip:port` + `option 146 ascii opervalue=1;delaytime=0;netfile=lswnet.cfg;`
-- **模式 67（通用 PXE）**：`option 66 ip-address IP` + `option 67 ascii lswnet.cfg`
-- 华为 S 系列交换机 EasyDeploy 认的是 **option 146**；其它厂家（或通用 DHCP 服务器）用 67
+- **Mode 67 (generic PXE)**: `option 66 ip-address IP` + `option 67 ascii lswnet.cfg`
+- Huawei S-series switches' EasyDeploy only understands **option 146**; other vendors (or a generic DHCP server) use 67
 
 ---
 
-## 🏗 超大规模（几千台）能力 · Large-scale (thousands of switches)
+## 🏗 Large-scale (thousands of switches)
 
-| 能力 · Capability | 说明 · Notes | English |
-| :-- | :-- | :-- |
-| **异步 TFTP 引擎** | asyncio 单事件循环多路复用，支持上千并发传输（对比旧版每请求一线程）；文件内存缓存预热（总量超 200MB 自动改按需加载） | asyncio single event loop, 1000+ concurrent transfers (vs. thread-per-request); prewarmed in-memory cache (falls back to on-demand above 200 MB total) |
-| **并发上限** | TFTP 页可调（默认 500），超限拒绝并提示客户端重试，防断电恢复时的「惊群效应」压垮服务器 | Adjustable on the TFTP tab (default 500); over-limit clients are rejected and told to retry, so a thundering herd after a power event cannot crush the server |
-| **并行生成** | 多线程渲染 + 进度条实时显示 N/总数；失败自动汇总导出 `failures.csv` | Multi-threaded rendering with live N/total progress; failures are summarised into `failures.csv` |
-| **批量校验** | 生成前自动查重复 ESN/IP/主机名等，杜绝千台开局事故 | Pre-generation duplicate ESN/IP/hostname checks to rule out thousand-switch incidents |
-| **设备库持久化** | SQLite 存储，重启不丢；搜索/分页支撑大清单操作 | SQLite storage survives restarts; search and paging keep large device lists workable |
-| **增量部署建议** | 千台场景建议：DHCP option 66 指向多台 TFTP（轮询），或按楼层/区域分段开局错峰 | At thousand-device scale: point DHCP option 66 at several TFTP servers (round-robin), or stagger rollouts by floor/zone |
+| Capability | Notes |
+| :-- | :-- |
+| **Asyncio TFTP engine** | asyncio single event loop, 1000+ concurrent transfers (vs. thread-per-request); prewarmed in-memory cache (falls back to on-demand above 200 MB total) |
+| **Concurrency cap** | Adjustable on the TFTP tab (default 500); over-limit clients are rejected and told to retry, so a thundering herd after a power event cannot crush the server |
+| **Parallel generation** | Multi-threaded rendering with live N/total progress; failures are summarised into `failures.csv` |
+| **Batch validation** | Pre-generation duplicate ESN/IP/hostname checks to rule out thousand-switch incidents |
+| **Device library persistence** | SQLite storage survives restarts; search and paging keep large device lists workable |
+| **Incremental rollout advice** | At thousand-device scale: point DHCP option 66 at several TFTP servers (round-robin), or stagger rollouts by floor/zone |
 
-**瓶颈提示**：单机 TFTP 受网卡带宽限制（百兆口约 100 台并发饱和），千台同开建议 option 66
-轮询 2-3 台服务器，或分批开局（如按楼栋不同 DHCP scope）。
+**Bottleneck note**: a single host's TFTP throughput is limited by its NIC bandwidth (a 100 Mbps port saturates at roughly
+100 concurrent devices); for a thousand switches, round-robin option 66 across 2-3 servers, or provision in batches
+(e.g. different DHCP scopes per building).
 
 ---
 
-## 📦 打包 · Packaging
+## 📦 Packaging
 
 ```bash
 python -m PyInstaller --clean --noconfirm NADT.spec
-# 产物: dist/NADT - Network Automation Deployment Tool.exe
-# 首次运行自动在 exe 旁生成 templates/ 和 output/
+# Output: dist/NADT - Network Automation Deployment Tool.exe
+# First run creates templates/ and output/ next to the exe
 ```
 
 ---
 
-## ⚠️ 注意事项 · Notes & caveats
+## ⚠️ Notes & caveats
 
-- TFTP 端口 69 需在防火墙放行；交换机管理网段与 DHCP/TFTP 必须互通
-- 仅用于授权设备的开局交付，请勿用于未授权网络
-- 老项目：`C:\Users\yata\Documents\coding\批量交换机脚本生成\`（Excel 宏版）
+- TFTP port 69 must be allowed through the firewall; the switch management network and the DHCP/TFTP hosts must reach each other
+- Only for provisioning authorised devices — do not use it on unauthorised networks
+- Legacy project: `C:\Users\yata\Documents\coding\批量交换机脚本生成\` (the Excel macro version)
 
 ---
 
-## 🧪 开发与测试 · Development & Tests
+## 🧪 Development & Tests
 
 ```bash
-# 安装（含开发依赖：pytest / ruff / openpyxl）
+# Install (with dev dependencies: pytest / ruff / openpyxl)
 python -m pip install -e ".[dev]"
 
-# 跑测试（模板引擎 / 批量编号 / 设备校验 / 清单解析 / DHCP / USB 包）
+# Run the tests (template engine / batch numbering / device validation / list parsing / DHCP / USB package)
 python -m pytest -q
 
-# 静态检查
+# Static checks
 ruff check .
 
-# 打包单文件 exe（Windows）
+# Build the single-file exe (Windows)
 python -m PyInstaller --clean --noconfirm NADT.spec
 ```
 
-- 装好后也可用命令入口启动：`nadt`
-- 核心只用标准库；`openpyxl` 是可选依赖（设备清单 xlsx / Excel 模板导入导出），缺失时界面会提示而非崩溃
-- CI：`.github/workflows/ci.yml`（Windows 跑 pytest、Linux 跑 ruff）；`.github/workflows/build.yml`（打 tag 或手动触发 → 产出 exe artifact）
-- 版本号在 `pyproject.toml` 与 `nadt.__version__` **两处**，必须保持一致（有测试守着）
+- Once installed you can also launch via the console entry point: `nadt`
+- The core is standard-library only; `openpyxl` is an optional dependency (device-list xlsx / Excel template import-export) — when it is missing the UI warns instead of crashing
+- CI: `.github/workflows/ci.yml` (pytest on Windows, ruff on Linux); `.github/workflows/build.yml` (tag push or manual trigger → exe artifact)
+- The version number lives in **two** places, `pyproject.toml` and `nadt.__version__`, and they must match (a test guards it)
 
 ---
 
-## ⚖️ 许可与声明 · License & disclaimer
+## ⚖️ License & disclaimer
 
-| 项目 · Item | 说明 · Details |
+| Item | Details |
 | :-- | :-- |
-| 许可 · License | **MIT** —— 见 [LICENSE](LICENSE) |
-| 语言与运行要求 · Runtime | Python 3.10+（见 [pyproject.toml](pyproject.toml)），主要在 Windows 上验证 |
-| 版本状态 · Status | **v1.12.2 预览版 / Preview** —— 生产使用前请在实验环境验证 |
-| 使用范围 · Scope | 仅用于授权设备的开局交付，请勿用于未授权网络 |
+| License | **MIT** — see [LICENSE](LICENSE) |
+| Runtime | Python 3.10+ (see [pyproject.toml](pyproject.toml)), mainly validated on Windows |
+| Status | **v1.12.2 Preview** — validate in a lab before production use |
+| Scope | Only for provisioning authorised devices — do not use it on unauthorised networks |
 
-**标签 · Topics：**
+**Topics:**
 <img src="https://img.shields.io/badge/cisco-5E81AC?style=for-the-badge" alt="cisco" />
 <img src="https://img.shields.io/badge/dhcp-81A1C1?style=for-the-badge" alt="dhcp" />
 <img src="https://img.shields.io/badge/easydeploy-8FBCBB?style=for-the-badge" alt="easydeploy" />
