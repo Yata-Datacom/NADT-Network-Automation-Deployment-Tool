@@ -559,8 +559,8 @@ def save_devices_db(devices: list):
         conn.executemany("INSERT INTO devices VALUES (?,?,?,?,?,?,?,?,?,?)", rows)
         conn.commit()
         conn.close()
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WARN] 模板映射保存失败: {e}", flush=True)
 
 
 def load_devices_db() -> list:
@@ -1023,8 +1023,8 @@ def get_local_ips() -> list:
             ip = info[4][0]
             if ip not in ips and not ip.startswith("127."):
                 ips.append(ip)
-    except Exception:
-        pass
+    except Exception as e:
+        print(f"[WARN] 设备库保存失败（devices.db 未写入）: {e}", flush=True)
     return ips
 
 
@@ -1156,8 +1156,8 @@ class TFTPTransfer(asyncio.DatagramProtocol):
         finally:
             try:
                 self.transport.close()
-            except Exception:
-                pass
+            except Exception as e:
+                print(f"[WARN] 设备表刷新失败: {e}", flush=True)
             try:
                 self.done.set()
             except Exception:
@@ -1169,8 +1169,8 @@ class TFTPTransfer(asyncio.DatagramProtocol):
     def connection_lost(self, exc):
         try:
             self.done.set()
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARN] 配置生成失败: {e}", flush=True)
 
 
 class TFTPListener(asyncio.DatagramProtocol):
@@ -1331,8 +1331,8 @@ class TFTPServer:
         pkt = struct.pack("!HH", 5, code) + msg.encode("utf-8", "replace") + b"\x00"
         try:
             self._listener_transport.sendto(pkt, addr)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARN] Excel 模板导出失败: {e}", flush=True)
 
     def _get_file(self, name: str) -> bytes | None:
         if name in self._cache:
@@ -1776,8 +1776,8 @@ class NADTGUI:
         self._set_status(f"表格已保存: {path}")
         try:
             os.startfile(path)
-        except Exception:
-            pass
+        except Exception as e:
+            print(f"[WARN] 表格保存失败: {e}", flush=True)
 
     def _on_sheet_generate(self):
         """表格直接渲染 → 输出 cfg（Excel 宏工作流，不依赖 ① ② 页）。"""
